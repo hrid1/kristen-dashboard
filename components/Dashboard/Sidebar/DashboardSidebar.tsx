@@ -13,6 +13,11 @@ import OverviewIcon from "@/components/icons/OverviewIcon";
 import PaymentsIcon from "@/components/icons/PaymentsIcon";
 import SettingsIcon from "@/components/icons/SettingsIcon";
 import UserManagementIcon from "@/components/icons/UserManagementIcon";
+import UserReportIcon from "@/components/icons/UserReportIcon";
+import UserSubscriptionIcon from "@/components/icons/UserSubscriptionIcon";
+import WebsiteInfosIcon from "@/components/icons/WebsiteInfosIcon";
+import AdsIcon from "@/components/icons/AdsIcon";
+import UcodesIcon from "@/components/icons/UcodesIcon";
 import {
   Sidebar,
   SidebarContent,
@@ -62,6 +67,31 @@ const data = {
       title: "Settings",
       url: "/dashboard/settings",
       icon: <SettingsIcon />,
+    },
+    {
+      title: "Report",
+      url: "/dashboard/report",
+      icon: <UserReportIcon />,
+    },
+    {
+      title: "Subscription",
+      url: "/dashboard/subscription",
+      icon: <UserSubscriptionIcon />,
+    },
+    {
+      title: "Website Infos",
+      url: "/dashboard/website-infos",
+      icon: <WebsiteInfosIcon />,
+    },
+    {
+      title: "Ads",
+      url: "/dashboard/ads",
+      icon: <AdsIcon />,
+    },
+    {
+      title: "Ucodes",
+      url: "/dashboard/ucodes",
+      icon: <UcodesIcon />,
     },
   ],
 };

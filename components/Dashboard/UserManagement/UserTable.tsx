@@ -6,8 +6,8 @@ import ArrowRightIcon from "@/public/icon/ArrowRightIcon";
 import { ReactNode } from "react";
 
 // Define types
-type TUser = {
-  subscriptionPlan: ReactNode;
+export type TUser = {
+  subscriptionPlan?: ReactNode;
   id: string;
   name: string;
   email: string;
@@ -20,14 +20,14 @@ type TUser = {
   updated_at: string;
 };
 
-type Pagination = {
+export type Pagination = {
   total: number;
   page: number;
   perPage: number;
   totalPages: number;
 };
 
-type UsersResponse = {
+export type UsersResponse = {
   success: boolean;
   message: string;
   data: TUser[];

@@ -29,7 +29,12 @@ export function NavMain({ items: groupLabels, currentPath }: NavMainProps) {
         {groupLabels.map((groupLabel) => (
           <SidebarMenuItem key={groupLabel.title}>
             <SidebarMenuButton
-              isActive={currentPath == groupLabel.url}
+              isActive={
+                groupLabel.url === "/dashboard"
+                  ? currentPath === "/dashboard"
+                  : currentPath === groupLabel.url ||
+                    currentPath.startsWith(`${groupLabel.url}/`)
+              }
               asChild
               tooltip={groupLabel.title}
             >

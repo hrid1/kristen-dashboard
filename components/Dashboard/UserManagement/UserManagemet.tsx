@@ -19,38 +19,10 @@ import {
 } from "@/components/ui/select";
 import { format } from "date-fns";
 import DownloadIcon from "@/components/icons/Download";
-import UserTable from "./UserTable";
+import UserTable, { UsersResponse, TUser } from "./UserTable";
 import { UserTableDownload } from "./UserTableDownload";
 import useAxiosPrivate from "@/hooks/UseAxiosPrivate";
 import { useQuery } from "@tanstack/react-query";
-
-
-type TUser = {
-    id: string;
-    name: string;
-    email: string;
-    phone_number: string | null;
-    address: string | null;
-    type: string;
-    status: 0 | 1;
-    approved_at: string | null;
-    created_at: string;
-    updated_at: string;
-};
-
-type Pagination = {
-    total: number;
-    page: number;
-    perPage: number;
-    totalPages: number;
-};
-
-type UsersResponse = {
-    success: boolean;
-    message: string;
-    data: TUser[];
-    pagination: Pagination;
-};
 
 export default function UserManagementTable() {
 
