@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import useAxiosPrivate from "@/hooks/UseAxiosPrivate";
+import { Spinner } from "@/components/Reusable/Loading";
 
 type EditUserModalProps = {
     id: string;
@@ -107,9 +108,16 @@ export default function EditUserModal({ id, refetch}: EditUserModalProps) {
                                 <button
                                     onClick={handleUpdateStatus}
                                     disabled={loading}
-                                    className="px-8 py-4 rounded-[12px] bg-[#C6A664] text-white hover:bg-[#a28e51] w-[232px] disabled:opacity-50"
+                                    className="px-8 py-4 rounded-[12px] bg-[#C6A664] text-white hover:bg-[#a28e51] w-[232px] disabled:opacity-50 flex items-center justify-center cursor-pointer"
                                 >
-                                    {loading ? "Saving..." : "Save Changes"}
+                                    {loading ? (
+                                        <span className="flex items-center justify-center gap-2">
+                                            <Spinner size="sm" color="#ffffff" />
+                                            <span>Saving...</span>
+                                        </span>
+                                    ) : (
+                                        "Save Changes"
+                                    )}
                                 </button>
                             </DialogClose>
                         </div>

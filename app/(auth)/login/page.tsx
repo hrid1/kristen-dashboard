@@ -6,9 +6,9 @@ import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import useAxiosPrivate from "@/hooks/UseAxiosPrivate";
-import { toast, Toaster } from "sonner";
+import { toast } from "sonner";
 import SetCookies from "@/hooks/token";
-import { Toast } from "radix-ui";
+import { Spinner } from "@/components/Reusable/Loading";
 
 
 interface LoginFormInputs {
@@ -36,7 +36,7 @@ const axiosPrivate = useAxiosPrivate();
         password: data.password,
       });
 
-      console.log(res?.data)
+      console.log(res?.data);
 
       if (res?.data?.success) {
         SetCookies(
@@ -49,11 +49,29 @@ const axiosPrivate = useAxiosPrivate();
         } else {
           router.push("/");
         }
+      } else {
+        const errorData = res?.data;
+        const msg =
+          typeof errorData?.message === "string"
+            ? errorData.message
+            : errorData?.message?.message || "Login failed";
+        toast.error(msg);
       }
     
     } catch (error: any) {
       console.error("Login error:", error.response || error);
-      Toaster(error.response?.data?.message || "Login failed");
+      const resData = error.response?.data;
+      let msg = "Login failed";
+      if (typeof resData?.message === "string") {
+        msg = resData.message;
+      } else if (typeof resData?.message?.message === "string") {
+        msg = resData.message.message;
+      } else if (typeof resData?.error === "string") {
+        msg = resData.error;
+      } else if (error?.message) {
+        msg = error.message;
+      }
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -106,10 +124,17 @@ const axiosPrivate = useAxiosPrivate();
           {/* Submit */}
           <Button
             type="submit"
-            className="w-full bg-[#C6A664] text-white py-3 rounded-full font-semibold transition-all"
+            className="w-full bg-[#C6A664] hover:bg-[#B39353] text-white py-3 rounded-full font-semibold transition-all flex items-center justify-center cursor-pointer"
             disabled={loading}
           >
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? (
+              <>
+                <Spinner size="sm" color="#ffffff" className="mr-2" />
+                <span>Signing in...</span>
+              </>
+            ) : (
+              "Sign In"
+            )}
           </Button>
         </form>
 

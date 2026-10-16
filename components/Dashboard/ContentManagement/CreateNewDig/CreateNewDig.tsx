@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -33,10 +34,17 @@ interface Answer {
 }
 
 type LayerTitle =
+  | "Field_Note"
   | "The_Question"
   | "The_Journal"
   | "The_Experience"
   | "The_Reflection";
+
+type DigType =
+  | "Mental_Body"
+  | "Emotional_Body"
+  | "Physical_Body"
+  | "Energy_Body";
 
 type AnswerType = "option-type" | "text-field";
 type IncludeOther = "yes" | "no";
@@ -47,6 +55,7 @@ interface Layer {
   mainQuestion: string;
   answerType: AnswerType;
   includeOther: IncludeOther;
+  otherText?: string;
   answers: Answer[];
   textareaPlaceholder?: string;
   correctAnswer?: string;
@@ -54,7 +63,7 @@ interface Layer {
 
 export interface DigFormData {
   digName: string;
-  totalXP: number;
+  type: DigType[];
   layers: Layer[];
 }
 
@@ -64,16 +73,17 @@ interface DigLayerPayload {
   question_name: LayerTitle;
   question_type: BackendQuestionType;
   point: number;
-  options: string[];
-  other: boolean;
-  other_text: string;
-  text: string | null;
-  question: string | null;
-  correct_answer: string | null;
+  options?: string[];
+  other?: boolean;
+  other_text?: string;
+  text?: string;
+  question?: string;
+  correct_answer?: string;
 }
 
 interface DigPayload {
   title: string;
+  type?: DigType[];
   layers: DigLayerPayload[];
 }
 
@@ -85,11 +95,19 @@ interface CreateDigFormProps {
 // ---------------- LABEL MAP ----------------
 
 const LAYER_TITLE_LABELS: Record<LayerTitle, string> = {
+  Field_Note: "Field Note",
   The_Question: "The Question",
   The_Journal: "The Journal",
   The_Experience: "The Experience",
   The_Reflection: "The Reflection",
 };
+
+const DIG_TYPES: DigType[] = [
+  "Mental_Body",
+  "Emotional_Body",
+  "Physical_Body",
+  "Energy_Body",
+];
 
 // ---------------- DUPLICATE CHECK HELPER ----------------
 
@@ -137,15 +155,16 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
   } = useForm<DigFormData>({
     defaultValues: {
       digName: "",
-      totalXP: 0,
+      type: [],
       layers: [
         {
-          questionTypeTitle: "The_Question",
+          questionTypeTitle: "Field_Note",
           xp: 20,
           mainQuestion:
             "When you feel overwhelmed, what emotion is usually beneath the surface?",
           answerType: "option-type",
           includeOther: "yes",
+          otherText: "Other (please specify)",
           answers: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
           correctAnswer: "",
         },
@@ -166,6 +185,7 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
             "If you dug in deeper to your response, set a simple goal for yourself to either:",
           answerType: "option-type",
           includeOther: "yes",
+          otherText: "Other (please specify)",
           answers: [{ text: "" }, { text: "" }, { text: "" }, { text: "" }],
           correctAnswer: "",
         },
@@ -223,7 +243,8 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
     for (let i = 0; i < data.layers.length; i++) {
       const layer = data.layers[i];
       const needsCorrectAnswer =
-        (layer.questionTypeTitle === "The_Question" ||
+        (layer.questionTypeTitle === "Field_Note" ||
+          layer.questionTypeTitle === "The_Question" ||
           layer.questionTypeTitle === "The_Experience") &&
         layer.answerType === "option-type";
 
@@ -237,11 +258,13 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
 
     const payload: DigPayload = {
       title: data.digName,
+      ...(data.type.length > 0 ? { type: data.type } : {}),
       layers: data.layers.map((layer) => {
         const questionType: BackendQuestionType =
           layer.answerType === "option-type" ? "Option" : "Text";
 
         const isCorrectAnswerLayer =
+          layer.questionTypeTitle === "Field_Note" ||
           layer.questionTypeTitle === "The_Question" ||
           layer.questionTypeTitle === "The_Experience";
 
@@ -249,21 +272,30 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
           question_name: layer.questionTypeTitle,
           question_type: questionType,
           point: Number(layer.xp || 0),
-          options:
-            layer.answerType === "option-type"
-              ? layer.answers.map((a) => a.text).filter(Boolean)
-              : [],
-          other: layer.includeOther === "yes",
-          other_text:
-            layer.includeOther === "yes" ? "Other (please specify)" : "",
-          text:
-            layer.answerType === "text-field"
-              ? layer.textareaPlaceholder || ""
-              : null,
-          question: layer.mainQuestion || null,
-          correct_answer: isCorrectAnswerLayer
-            ? layer.correctAnswer?.trim() || null
-            : null,
+          ...(layer.mainQuestion.trim()
+            ? { question: layer.mainQuestion.trim() }
+            : {}),
+          ...(layer.answerType === "option-type"
+            ? {
+                options: layer.answers
+                  .map((answer) => answer.text.trim())
+                  .filter(Boolean),
+                ...(layer.includeOther === "yes"
+                  ? {
+                      other: true,
+                      other_text:
+                        layer.otherText?.trim() || "Other (please specify)",
+                    }
+                  : {}),
+              }
+            : {
+                ...(layer.textareaPlaceholder?.trim()
+                  ? { text: layer.textareaPlaceholder.trim() }
+                  : {}),
+              }),
+          ...(isCorrectAnswerLayer && layer.correctAnswer?.trim()
+            ? { correct_answer: layer.correctAnswer.trim() }
+            : {}),
         };
       }),
     };
@@ -319,31 +351,42 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
               <p className="text-red-600 text-sm">{errors.digName.message}</p>
             )}
           </div>
-
-          {/* TOTAL XP */}
-          <div className="space-y-2">
-            <Label
-              htmlFor="totalXP"
-              className="text-[#777980] font-medium text-[14px]"
-            >
-              Total XP
-            </Label>
-            <input
-              id="totalXP"
-              type="number"
-              placeholder="80"
-              {...register("totalXP", {
-                required: "Total XP is required",
-                valueAsNumber: true,
-                min: { value: 0, message: "XP cannot be negative" },
-              })}
-              className="border text-[#1D1F2C] font-medium text-[16px] w-full p-4 rounded-[16px]"
-            />
-            {errors.totalXP && (
-              <p className="text-red-600 text-sm">{errors.totalXP.message}</p>
-            )}
-          </div>
         </div>
+
+        <fieldset className="space-y-3">
+          <legend className="text-[#777980] font-medium text-[14px]">
+            Dig Types
+          </legend>
+          <div className="flex flex-wrap gap-3">
+            {DIG_TYPES.map((type) => {
+              const selectedTypes = watch("type") || [];
+              const checked = selectedTypes.includes(type);
+
+              return (
+                <label
+                  key={type}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm"
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(isChecked) => {
+                      const nextTypes = isChecked
+                        ? [...selectedTypes, type]
+                        : selectedTypes.filter(
+                            (selectedType) => selectedType !== type,
+                          );
+                      setValue("type", nextTypes, {
+                        shouldDirty: true,
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                  {type.replace("_", " ")}
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
 
         {/* LAYERS */}
         <div className="space-y-4">
@@ -366,11 +409,12 @@ export function CreateDigForm({ onBack, breadLink }: CreateDigFormProps) {
             type="button"
             onClick={() =>
               append({
-                questionTypeTitle: "The_Question",
+                questionTypeTitle: "Field_Note",
                 xp: 0,
                 mainQuestion: "",
                 answerType: "option-type",
                 includeOther: "no",
+                otherText: "Other (please specify)",
                 answers: [],
                 correctAnswer: "",
               })
@@ -416,11 +460,12 @@ function LayerForm({
   const answerType = watch(`layers.${layerIndex}.answerType`) || "option-type";
   const includeOther = watch(`layers.${layerIndex}.includeOther`) || "yes";
   const questionTypeTitle =
-    watch(`layers.${layerIndex}.questionTypeTitle`) || "The_Question";
+    watch(`layers.${layerIndex}.questionTypeTitle`) || "Field_Note";
   const correctAnswer = watch(`layers.${layerIndex}.correctAnswer`) ?? "";
   const allAnswers = watch(`layers.${layerIndex}.answers`) || [];
 
   const showCorrectAnswer =
+    questionTypeTitle === "Field_Note" ||
     questionTypeTitle === "The_Question" ||
     questionTypeTitle === "The_Experience";
 
@@ -495,7 +540,7 @@ function LayerForm({
                 <SelectValue placeholder="Select layer type" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="The_Question">The Question</SelectItem>
+                <SelectItem value="Field_Note">Field Note</SelectItem>
                 <SelectItem value="The_Journal">The Journal</SelectItem>
                 <SelectItem value="The_Experience">The Experience</SelectItem>
                 <SelectItem value="The_Reflection">The Reflection</SelectItem>
@@ -565,6 +610,17 @@ function LayerForm({
             </Select>
           </div>
         </div>
+
+        {answerType === "option-type" && includeOther === "yes" && (
+          <div className="space-y-2">
+            <Label>Other Option Placeholder</Label>
+            <input
+              {...register(`layers.${layerIndex}.otherText`)}
+              placeholder="Other (please specify)"
+              className="border text-[#1D1F2C] font-medium text-[16px] w-full p-4 rounded-[16px] bg-white"
+            />
+          </div>
+        )}
 
         {/* OPTION TYPE ANSWERS */}
         {answerType === "option-type" && (

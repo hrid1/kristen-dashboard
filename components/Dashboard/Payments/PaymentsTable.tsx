@@ -2,6 +2,7 @@
 
 import ArrowLeftIcon from "@/public/icon/ArrowLeftIcon";
 import ArrowRightIcon from "@/public/icon/ArrowRightIcon";
+import Loading from "@/components/Reusable/Loading";
 
 export interface Subscription {
     id: string;
@@ -68,11 +69,7 @@ export default function PaymentsTable({
 
                 <tbody className="divide-y">
                     {isLoading ? (
-                        <tr>
-                            <td colSpan={6} className="text-center py-6 text-gray-400">
-                                Loading...
-                            </td>
-                        </tr>
+                        <Loading variant="table" colSpan={6} text="Loading payments..." />
                     ) : payments.length === 0 ? (
                         <tr>
                             <td colSpan={6} className="text-center py-6 text-gray-400">

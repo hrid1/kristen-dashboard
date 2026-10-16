@@ -13,6 +13,7 @@ import ArrowRightIcon from "@/public/icon/ArrowRightIcon";
 import ArrowLeftIcon from "@/public/icon/ArrowLeftIcon";
 import { toast } from "sonner";
 import EditIcon from "@/components/icons/EditIcon";
+import Loading from "@/components/Reusable/Loading";
 
 interface Quote {
   id: string;
@@ -88,7 +89,7 @@ export default function QuotesTable() {
     setSelectedDeleteId(null);
   };
 
-  if (isLoading) return <div>Loading...</div>;
+  if (isLoading) return <Loading text="Loading quotes..." variant="card" className="my-6" />;
   if (isError) return <div className="text-red-500">{error.message}</div>;
 
   const quotes = data?.data ?? [];

@@ -13,6 +13,8 @@ import EditDigModal from "../CreateNewDig/EditDigModal";
 import ArrowRightIcon from "@/public/icon/ArrowRightIcon";
 import ArrowLeftIcon from "@/public/icon/ArrowLeftIcon";
 import EditIcon from "@/components/icons/EditIcon";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Loading from "@/components/Reusable/Loading";
 
 /* ---------------- TYPES ---------------- */
 
@@ -64,11 +66,33 @@ export default function ExercisesTable() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedDeleteId, setSelectedDeleteId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [digType, setDigType] = useState("All");
 
   /* ---------------- PAGINATION ---------------- */
 
   const [page, setPage] = useState(1);
-  const limit = 10;
+  const perPage = 10;
+
+  const fetchDigs = async (type: string, requestedPage: number) => {
+    const params = new URLSearchParams({
+      page: String(requestedPage),
+      perPage: String(perPage),
+    });
+    if (type !== "All") params.set("type", type);
+
+    const res = await axiosPrivate.get<DigsResponse>(
+      `/admin/digs?${params.toString()}`,
+    );
+    return res.data;
+  };
+
+  const prefetchDigType = (type: string) => {
+    void queryClient.prefetchQuery({
+      queryKey: ["digs", 1, perPage, type],
+      queryFn: () => fetchDigs(type, 1),
+      staleTime: 60_000,
+    });
+  };
 
   /* ---------------- FETCH DIG LIST ---------------- */
 
@@ -79,15 +103,10 @@ export default function ExercisesTable() {
     error,
     isFetching,
   } = useQuery<DigsResponse, Error>({
-    queryKey: ["digs", page],
-    queryFn: async () => {
-      const res = await axiosPrivate.get(
-        `/admin/digs?page=${page}&limit=${limit}`
-      );
-      return res.data;
-    },
+    queryKey: ["digs", page, perPage, digType],
+    queryFn: () => fetchDigs(digType, page),
     placeholderData: (prev) => prev,
-    staleTime: 0,
+    staleTime: 60_000,
   });
 
   /* ---------------- FETCH SINGLE DIG FOR EDIT ---------------- */
@@ -146,10 +165,6 @@ export default function ExercisesTable() {
 
   /* ---------------- CONDITIONAL ---------------- */
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError)
-    return <div className="text-red-600">Error: {error?.message}</div>;
-
   if (showCreate) {
     return (
       <CreateDigForm
@@ -179,19 +194,52 @@ export default function ExercisesTable() {
 
   return (
     <div className="bg-white rounded-xl mt-5 overflow-x-auto shadow-sm">
+      <div className="flex flex-col gap-4 border-b px-6 py-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <h2 className="shrink-0 text-lg font-semibold text-gray-800">
+            List of All Digs
+          </h2>
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between px-6 py-4 border-b">
-        <h2 className="text-lg font-semibold text-gray-800">
-          List of All Digs
-        </h2>
-
+          <Tabs
+            value={digType}
+            onValueChange={(value) => {
+              setDigType(value);
+              setPage(1);
+            }}
+          >
+            <TabsList className="flex h-auto flex-wrap justify-start gap-1 bg-transparent p-0 shadow-none border">
+              {[
+                "All",
+                "Mental_Body",
+                "Emotional_Body",
+                "Physical_Body",
+                "Energy_Body",
+              ].map((type) => (
+                <TabsTrigger
+                  key={type}
+                  value={type}
+                  onMouseEnter={() => prefetchDigType(type)}
+                  onFocus={() => prefetchDigType(type)}
+                  className="whitespace-nowrap rounded-md px-3 py-2 text-xs transition-all hover:bg-gray-100 data-[state=active]:bg-[#C6A664] data-[state=active]:text-white"
+                >
+                  {type.at(0)?.toUpperCase() + type.slice(1).toLowerCase().replace("_", " ")  }
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+        </div>
         <Button onClick={() => setShowCreate(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add New Dig
         </Button>
       </div>
 
+      {isLoading ? (
+        <Loading text="Loading digs..." className="py-12" />
+      ) : isError ? (
+        <div className="px-6 py-6 text-red-600">Error: {error?.message}</div>
+      ) : (
+        <>
       {/* TABLE */}
       <table className="w-full text-sm">
         <thead className="bg-gray-50 text-sm uppercase text-[#1D1F2C]">
@@ -329,6 +377,8 @@ export default function ExercisesTable() {
         onConfirm={handleDelete}
         onCancel={() => setDeleteModalOpen(false)}
       />
+        </>
+      )}
     </div>
   );
 }

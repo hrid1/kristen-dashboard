@@ -37,6 +37,7 @@ import { toast } from "sonner";
 /* ---------------- TYPES ---------------- */
 
 type LayerTitle =
+  | "Field_Note"
   | "The_Question"
   | "The_Journal"
   | "The_Experience"
@@ -56,6 +57,7 @@ interface Layer {
   mainQuestion: string;
   answerType: AnswerType;
   includeOther: IncludeOther;
+  otherText?: string;
   answers: Answer[];
   textareaPlaceholder?: string;
   correctAnswer?: string;
@@ -95,6 +97,7 @@ interface EditDigModalProps {
 /* ---------------- LABEL MAP ---------------- */
 
 const LAYER_TITLE_LABELS: Record<LayerTitle, string> = {
+  Field_Note: "Field Note",
   The_Question: "The Question",
   The_Journal: "The Journal",
   The_Experience: "The Experience",
@@ -151,12 +154,16 @@ export default function EditDigModal({
         digName: initialData.title,
         layers: initialData.layers.map((layer) => ({
           id: layer.id,
-          questionTypeTitle: layer.question_name,
+          questionTypeTitle:
+            layer.question_name === "The_Question"
+              ? "Field_Note"
+              : layer.question_name,
           xp: layer.point,
           mainQuestion: layer.question || "",
           answerType:
             layer.question_type === "Option" ? "option-type" : "text-field",
           includeOther: layer.other ? "yes" : "no",
+          otherText: layer.other_text || "Other (please specify)",
           answers: layer.options.map((opt) => ({ text: opt })),
           textareaPlaceholder: layer.text || "",
           correctAnswer: layer.correct_answer || "",
@@ -180,7 +187,8 @@ export default function EditDigModal({
     for (let i = 0; i < data.layers.length; i++) {
       const layer = data.layers[i];
       const needsCorrectAnswer =
-        (layer.questionTypeTitle === "The_Question" ||
+        (layer.questionTypeTitle === "Field_Note" ||
+          layer.questionTypeTitle === "The_Question" ||
           layer.questionTypeTitle === "The_Experience") &&
         layer.answerType === "option-type";
 
@@ -197,6 +205,7 @@ export default function EditDigModal({
         title: data.digName,
         layers: data.layers.map((layer) => {
           const isCorrectAnswerLayer =
+            layer.questionTypeTitle === "Field_Note" ||
             layer.questionTypeTitle === "The_Question" ||
             layer.questionTypeTitle === "The_Experience";
 
@@ -212,7 +221,9 @@ export default function EditDigModal({
                 : [],
             other: layer.includeOther === "yes",
             other_text:
-              layer.includeOther === "yes" ? "Other (please specify)" : "",
+              layer.includeOther === "yes"
+                ? layer.otherText?.trim() || "Other (please specify)"
+                : "",
             text:
               layer.answerType === "text-field"
                 ? layer.textareaPlaceholder || ""
@@ -327,11 +338,12 @@ function LayerFormSection({
   const answerType = watch(`layers.${layerIndex}.answerType`) ?? "option-type";
   const includeOther = watch(`layers.${layerIndex}.includeOther`) ?? "no";
   const questionTypeTitle =
-    watch(`layers.${layerIndex}.questionTypeTitle`) ?? "The_Question";
+    watch(`layers.${layerIndex}.questionTypeTitle`) ?? "Field_Note";
   const correctAnswer = watch(`layers.${layerIndex}.correctAnswer`) ?? "";
   const allAnswers = watch(`layers.${layerIndex}.answers`) ?? [];
 
   const showCorrectAnswer =
+    questionTypeTitle === "Field_Note" ||
     questionTypeTitle === "The_Question" ||
     questionTypeTitle === "The_Experience";
 
@@ -386,7 +398,7 @@ function LayerFormSection({
               <SelectValue placeholder="Select layer type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="The_Question">The Question</SelectItem>
+              <SelectItem value="Field_Note">Field Note</SelectItem>
               <SelectItem value="The_Journal">The Journal</SelectItem>
               <SelectItem value="The_Experience">The Experience</SelectItem>
               <SelectItem value="The_Reflection">The Reflection</SelectItem>
@@ -455,6 +467,19 @@ function LayerFormSection({
           </Select>
         </div>
       </div>
+
+      {answerType === "option-type" && includeOther === "yes" && (
+        <div className="space-y-1.5">
+          <Label className="text-sm text-[#777980]">
+            Other Option Placeholder
+          </Label>
+          <Input
+            {...register(`layers.${layerIndex}.otherText`)}
+            placeholder="Other (please specify)"
+            className="bg-white rounded-xl"
+          />
+        </div>
+      )}
 
       {/* OPTION-TYPE ANSWERS */}
       {answerType === "option-type" && (

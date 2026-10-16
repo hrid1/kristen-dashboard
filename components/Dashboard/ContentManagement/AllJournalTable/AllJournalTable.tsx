@@ -12,6 +12,7 @@ import EditJournalModal from "./EditAllJournalModal";
 import ArrowRightIcon from "@/public/icon/ArrowRightIcon";
 import ArrowLeftIcon from "@/public/icon/ArrowLeftIcon";
 import EditIcon from "@/components/icons/EditIcon";
+import Loading from "@/components/Reusable/Loading";
 
 export type JournalEntry = {
   id: string;
@@ -121,7 +122,7 @@ export default function AllJournalTable() {
     }) ?? [];
 
 
-  if (isLoading) return <p>Loading journals...</p>;
+  if (isLoading) return <Loading text="Loading journals..." variant="card" className="my-6" />;
   if (isError)
     return <p className="text-red-600">Failed to load journals: {error.message}</p>;
   

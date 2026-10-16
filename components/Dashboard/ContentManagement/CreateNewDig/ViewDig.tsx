@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import useAxiosPrivate from "@/hooks/UseAxiosPrivate";
 import EditDigModal from "./EditDigModal";
 import { Select } from '@radix-ui/react-select';
+import Loading from "@/components/Reusable/Loading";
 
 // ---------------- TYPES ----------------
 
@@ -23,6 +24,7 @@ export interface EditDigPageProps {
 }
 
 type LayerTitle =
+  | "Field_Note"
   | "The_Question"
   | "The_Journal"
   | "The_Experience"
@@ -56,6 +58,7 @@ interface DigResponse {
 // ---------------- LABEL MAP ----------------
 
 const QUESTION_NAME_LABELS: Record<string, string> = {
+  Field_Note: "Field Note",
   The_Question: "The Question",
   The_Journal: "The Journal",
   The_Experience: "The Experience",
@@ -84,11 +87,7 @@ export default function EditDigPage({
   });
 
   if (isLoading)
-    return (
-      <div className="flex items-center justify-center h-40 text-[#777980] text-sm">
-        Loading...
-      </div>
-    );
+    return <Loading text="Loading dig details..." variant="card" className="my-6" />;
 
   if (isError)
     return <div className="text-red-600 p-6">Error: {error?.message}</div>;

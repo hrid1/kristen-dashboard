@@ -4,6 +4,7 @@ import EditUserModal from "../EditUSerModal/UserModal";
 import ArrowLeftIcon from "@/public/icon/ArrowLeftIcon";
 import ArrowRightIcon from "@/public/icon/ArrowRightIcon";
 import { ReactNode } from "react";
+import Loading from "@/components/Reusable/Loading";
 
 // Define types
 export type TUser = {
@@ -55,7 +56,7 @@ export default function UserTable({
   page,
   setPage,
 }: UserTableProps) {
-  if (isLoading) return <div className="text-center py-10">Loading...</div>;
+  if (isLoading) return <Loading text="Loading users..." variant="card" className="my-6" />;
 
   if (isError)
     return (

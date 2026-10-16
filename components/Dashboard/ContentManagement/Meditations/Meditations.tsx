@@ -14,6 +14,7 @@ import EditIcon from "@/components/icons/EditIcon";
 import { ConfirmModal } from "@/components/Reusable/DeletDialouge";
 import { CiPlay1 } from "react-icons/ci";
 import { toast } from "sonner";
+import Loading from "@/components/Reusable/Loading";
 
 type MeditationItem = {
   id: string;
@@ -140,7 +141,7 @@ export default function MeditationsTable() {
   }
 
   console.log()
-  if (isLoading) return <div>Loading meditations...</div>;
+  if (isLoading) return <Loading text="Loading meditations..." variant="card" className="my-6" />;
   if (isError) return <div>Failed to load data</div>;
 
   const meditations = data?.data ?? [];
