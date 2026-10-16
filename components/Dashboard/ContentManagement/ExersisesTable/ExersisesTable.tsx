@@ -234,10 +234,10 @@ export default function ExercisesTable() {
         </Button>
       </div>
 
-      {isLoading ? (
-        <Loading text="Loading digs..." className="py-12" />
-      ) : isError ? (
+      {isError ? (
         <div className="px-6 py-6 text-red-600">Error: {error?.message}</div>
+      ) : isLoading || isFetching ? (
+        <Loading text="Loading digs..." className="py-12" />
       ) : (
         <>
       {/* TABLE */}
